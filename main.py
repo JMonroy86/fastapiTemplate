@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 from core.config import Settings
-from db.db_config import engine, database, metadata
 from apis.base import api_router
+from db.db_config import init_db
 
 
 from utils import get_logger
@@ -13,18 +13,13 @@ logger = get_logger(__name__)
 app = FastAPI(title=Settings.PROJECT_NAME, version=Settings.PROJECT_VERSION)
 
 
+async def start_db():
+    app.state.pool = await init_db()
+    logger.info("DB initialized successfully")
+
+
 def include_router():
     app.include_router(api_router)
-
-
-async def start_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
-        logger.info("Database connected successfully")
-
-    # for AsyncEngine created in function scope, close and
-    # clean-up pooled connections
-    await engine.dispose()
 
 
 @app.on_event("startup")
@@ -38,8 +33,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Shutting down...")
-    await database.disconnect()
-    logger.info("Database disconnected successfully")
 
 
 def main():

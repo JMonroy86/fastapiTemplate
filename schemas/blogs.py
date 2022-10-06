@@ -13,7 +13,7 @@ class BlogBase(BaseModel):
 
 
 # this will be used to validate data while creating a Blog
-class BlogCreate(BlogBase):
+class BlogCreate_schema(BlogBase):
     title: str
     body: str
 
